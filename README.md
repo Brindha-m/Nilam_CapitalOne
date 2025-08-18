@@ -42,12 +42,8 @@
    ```toml
    GEMINI_API_KEY = "your-gemini-api-key-here"
    ```
-
-## 🚀 Usage
-
-### Running the Application
-
-**Start the main application**
+   
+4. **Start the main application**
    ```bash
    streamlit run main.py
    ```
