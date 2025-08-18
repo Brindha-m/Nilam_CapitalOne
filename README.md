@@ -2,7 +2,7 @@
 
 <br>
 
-**Nilam (Native Intelligence for Land and Agriculture Management) is an integrated AI-powered agricultural  multilingual chat assistance, leaf disease detection, and personalized crop recommendation systems.**
+**Nilam (Native Intelligence for Land and Agriculture Management) is an integrated AI-powered agricultural  multilingual chat assistance, leaf disease detection, and personalized crop recommendation system.**
 
 ## Modules Architecture
 
