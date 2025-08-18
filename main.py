@@ -4,10 +4,10 @@ import os
 
 # Page configuration
 st.set_page_config(
-    page_title="Nilam - Your Agricultural Assistant",
-    page_icon="🌱",
     layout="wide",
     initial_sidebar_state="expanded"
+    page_title="Nilam - Your Agricultural Assistant",
+    page_icon="🌱"
 )
 
 # Enhanced CSS with improved selectbox styling
