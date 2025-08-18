@@ -5,7 +5,7 @@ import os
 # Page configuration
 st.set_page_config(
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="expanded",
     page_title="Nilam - Your Agricultural Assistant",
     page_icon="🌱"
 )
