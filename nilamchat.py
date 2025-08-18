@@ -591,7 +591,8 @@ TRANSLATIONS = {
 
 def initialize_gemini():
     """Initialize Gemini API"""
-    api_key = st.secrets.get("GEMINI_API_KEY") or st.sidebar.text_input("🔑 Enter Gemini API Key", type="password")
+    # api_key = st.secrets.get("GEMINI_API_KEY") or st.sidebar.text_input("🔑 Enter Gemini API Key", type="password")
+    api_key = "AIzaSyDbKZ9mDvTq_7beXs4Vb0gnnK2XwHmauco"
     if api_key:
         try:
             genai.configure(api_key=api_key)
