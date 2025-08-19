@@ -21,7 +21,8 @@
 - **Smart Crop Recommendation**: AI-driven crop selection system custom trained data collected from OWM (Open weather map), Data.gov.in, copernicus trained with bidirectional stacked LSTM.
 - **Recommend suitable crops for a specific location**: EDA combined data is @ data/nilamdata.csv
 
-<img width="1356" height="718" alt="Screenshot 2025-08-19 040743" src="https://github.com/user-attachments/assets/40e0a610-a778-4995-b66f-55fac4ec0c5c" />
+<img width="1351" height="808" alt="Screenshot 2025-08-19 040743" src="https://github.com/user-attachments/assets/40e0a610-a778-4995-b66f-55fac4ec0c5c" />
+<img width="1351" height="808" alt="Screenshot 2025-08-19 162233" src="https://github.com/user-attachments/assets/a66067be-80bc-4b88-a994-5d5267d86160" />
 <img width="1351" height="808" alt="Screenshot 2025-08-19 040912" src="https://github.com/user-attachments/assets/3481ef28-3e1a-4b80-87c5-01d9f2b4c3e7" />
 
 ## 📋 Prerequisites
