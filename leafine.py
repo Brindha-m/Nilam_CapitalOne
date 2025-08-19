@@ -1,31 +1,18 @@
 import streamlit as st
 
-# Remove page config since it's handled by main app
 # st.set_page_config(layout="wide", initial_sidebar_state="collapsed")
 st.markdown("""
 <style>
     .stMainBlockContainer {
-        padding-top: 0rem;
-        padding-bottom: 0rem;
-        padding-left: 0rem;
-        padding-right: 0rem;
+        padding: 0rem;
     }
     .stMain {
         padding: 0rem;
     }
     iframe {
-        position: fixed;
-        top: 0;
-        left: 0;
-        bottom: 0;
-        right: 0;
         width: 100%;
-        height: 100%;
+        height: 100vh; /* Full viewport height */
         border: none;
-        margin: 0;
-        padding: 0;
-        overflow: hidden;
-        z-index: 999999;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -42,6 +29,38 @@ def main():
         """, 
         unsafe_allow_html=True
     )
+    
+    APP_URL = "https://brindha-m-leafine.streamlit.app/"
+    
+    st.markdown("""
+    <style>
+    .custom-button {
+        background: linear-gradient(135deg, #8b7355 0%, #ede4d3 50%, #7a8471 100%);
+        padding: 1rem 2.5rem;
+        border-radius: 20px;
+        color: black;
+        text-align: center;
+        font-weight: 700;
+        font-size: 1.5rem;
+        border: 1px solid rgba(255,255,255,0.2);
+        box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        text-decoration: none;
+        display: inline-block;
+        cursor: pointer;
+        transition: all 0.3s ease-in-out;
+    }
+    .custom-button:hover {
+        transform: scale(1.05);
+        box-shadow: 0 12px 40px rgba(0,0,0,0.2);
+    }
+    </style>
+    """, unsafe_allow_html=True)
+    
+    st.markdown(
+        f'<a href="{APP_URL}" target="_blank" class="custom-button">🚀 Open Nilam App</a>',
+        unsafe_allow_html=True
+    )
+
 
 if __name__ == "__main__":
     main()
