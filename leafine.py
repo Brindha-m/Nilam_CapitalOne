@@ -11,7 +11,7 @@ st.markdown("""
     }
     iframe {
         width: 100%;
-        height: 100vh; /* Full viewport height */
+        height: 100vh; 
         border: none;
     }
 </style>
@@ -59,11 +59,10 @@ def main():
     """, unsafe_allow_html=True)
     
     st.markdown(
-        f'<a href="{APP_URL}" target="_blank" class="custom-button">🚀 Open Leafine.. </a>',
+        f'<a href="{APP_URL}" target="_blank" class="custom-button">🚀 Open Leafine..</a>',
         unsafe_allow_html=True
     )
-    
-    
+
 
 if __name__ == "__main__":
     main()
