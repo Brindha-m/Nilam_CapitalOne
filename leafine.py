@@ -21,8 +21,7 @@ st.markdown("""
 def main():
     st.markdown(
         """
-        APP_URL = "https://brindha-m-leafine.streamlit.app/?embed=false&embed_options=disable_scrolling,dark_theme"
-        <iframe src=APP_URL
+        <iframe src="https://brindha-m-leafine.streamlit.app/?embed=false&embed_options=disable_scrolling,dark_theme"
                 width="100%" 
                 height="100%" 
                 frameborder="0"
@@ -32,7 +31,7 @@ def main():
         unsafe_allow_html=True
     )
     
-    # APP_URL = "https://brindha-m-leafine.streamlit.app/"
+    APP_URL = "https://brindha-m-leafine.streamlit.app/"
     
     st.markdown("""
     <style>
