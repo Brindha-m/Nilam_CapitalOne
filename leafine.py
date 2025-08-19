@@ -21,7 +21,7 @@ st.markdown("""
 def main():
     st.markdown(
         """
-        <iframe src="https://brindha-m-leafine.streamlit.app/?embed=false&embed_options=disable_scrolling,dark_theme"
+        <iframe src="https://brindha-m-leafine.streamlit.app/?embed=true&embed_options=disable_scrolling,dark_theme"
                 width="100%" 
                 height="100%" 
                 frameborder="0"
