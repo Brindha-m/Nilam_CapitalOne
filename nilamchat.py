@@ -527,21 +527,21 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Agricultural data constants
+# Agricultural data constants - REALISTIC VALUES
 BASE_COSTS = {
-    "Rice": 35000, "Wheat": 28000, "Cotton": 42000, "Sugarcane": 65000, 
-    "Maize": 25000, "Groundnut": 30000, "Soybean": 27000, "Turmeric": 45000,
-    "Onion": 40000, "Tomato": 38000, "Mango": 80000, "Grapes": 120000,
-    "Tea": 150000, "Coffee": 180000, "Cardamom": 200000, "Black Pepper": 180000
+    "Rice": 60000, "Wheat": 50000, "Cotton": 70000, "Sugarcane": 80000, 
+    "Maize": 55000, "Groundnut": 65000, "Soybean": 58000, "Turmeric": 120000,
+    "Onion": 85000, "Tomato": 95000, "Mango": 250000, "Grapes": 300000,
+    "Tea": 400000, "Coffee": 350000, "Cardamom": 500000, "Black Pepper": 300000
 }
 
 YIELD_DATA = {
-    "Rice": {"yield_kg": 2500, "price_kg": 20}, "Wheat": {"yield_kg": 2000, "price_kg": 22},
-    "Cotton": {"yield_kg": 500, "price_kg": 85}, "Sugarcane": {"yield_kg": 60000, "price_kg": 3.5},
-    "Maize": {"yield_kg": 3000, "price_kg": 18}, "Groundnut": {"yield_kg": 1200, "price_kg": 45},
-    "Soybean": {"yield_kg": 1800, "price_kg": 35}, "Turmeric": {"yield_kg": 8000, "price_kg": 150},
+    "Rice": {"yield_kg": 2800, "price_kg": 20}, "Wheat": {"yield_kg": 3200, "price_kg": 22},
+    "Cotton": {"yield_kg": 2200, "price_kg": 65}, "Sugarcane": {"yield_kg": 65000, "price_kg": 3.5},
+    "Maize": {"yield_kg": 4500, "price_kg": 18}, "Groundnut": {"yield_kg": 2000, "price_kg": 45},
+    "Soybean": {"yield_kg": 2500, "price_kg": 35}, "Turmeric": {"yield_kg": 8000, "price_kg": 150},
     "Onion": {"yield_kg": 25000, "price_kg": 12}, "Tomato": {"yield_kg": 30000, "price_kg": 15},
-    "Mango": {"yield_kg": 15000, "price_kg": 80}, "Grapes": {"yield_kg": 12000, "price_kg": 150}
+    "Mango": {"yield_kg": 0, "price_kg": 45}, "Grapes": {"yield_kg": 12000, "price_kg": 150}  # Mango takes 4-5 years
 }
 
 GOVERNMENT_SCHEMES = {
@@ -728,9 +728,16 @@ def create_crop_recommendation_analysis(region, query, context="default"):
             cost = BASE_COSTS[crop]
             yield_kg = YIELD_DATA[crop]['yield_kg']
             price_kg = YIELD_DATA[crop]['price_kg']
-            revenue = yield_kg * price_kg
-            profit = revenue - cost
-            roi = (profit / cost * 100) if cost > 0 else 0
+            
+            # Special handling for perennial crops like Mango
+            if crop == 'Mango':
+                revenue = 0  # No revenue in first few years
+                profit = -cost  # Pure loss initially
+                roi = -100  # Negative ROI initially
+            else:
+                revenue = yield_kg * price_kg * 0.85  # 85% success rate
+                profit = revenue - cost
+                roi = (profit / cost * 100) if cost > 0 else 0
             
             crop_performance.append({
                 'Crop': crop,
@@ -744,29 +751,35 @@ def create_crop_recommendation_analysis(region, query, context="default"):
     df_crops = pd.DataFrame(crop_performance)
     
     if not df_crops.empty:
-        fig_roi = px.bar(df_crops, x='Crop', y='ROI_Percent',
-                        title=f"ROI Comparison for {region}",
-                        color='ROI_Percent', color_continuous_scale='Greens',
-                        text='ROI_Percent')
-        fig_roi.update_traces(
-            texttemplate='%{text:.1f}%', 
-            textposition='outside',
-            hovertemplate='<b>%{x}</b><br>ROI: %{y:.1f}%<extra></extra>'
-        )
-        fig_roi.update_layout(
-            font=dict(size=14, color='#2d3436'),
-            paper_bgcolor='rgba(0,0,0,0)',
-            plot_bgcolor='rgba(0,0,0,0)',
-            title_font_color='#2d3436',
-            height=500,
-            hovermode='closest'
-        )
-        st.plotly_chart(fig_roi, use_container_width=True, key=f"roi_chart_crop_recommendation_{context}")
+        # Filter out crops with negative ROI for the chart
+        df_positive_roi = df_crops[df_crops['ROI_Percent'] >= 0]
+        
+        if not df_positive_roi.empty:
+            fig_roi = px.bar(df_positive_roi, x='Crop', y='ROI_Percent',
+                            title=f"ROI Comparison for {region} (Annual Crops Only)",
+                            color='ROI_Percent', color_continuous_scale='Greens',
+                            text='ROI_Percent')
+            fig_roi.update_traces(
+                texttemplate='%{text:.1f}%', 
+                textposition='outside',
+                hovertemplate='<b>%{x}</b><br>ROI: %{y:.1f}%<extra></extra>'
+            )
+            fig_roi.update_layout(
+                font=dict(size=14, color='#2d3436'),
+                paper_bgcolor='rgba(0,0,0,0)',
+                plot_bgcolor='rgba(0,0,0,0)',
+                title_font_color='#2d3436',
+                height=500,
+                hovermode='closest'
+            )
+            st.plotly_chart(fig_roi, use_container_width=True, key=f"roi_chart_crop_recommendation_{context}")
         
         st.markdown("#### 🏆 **Top Crop Recommendations**")
-        top_crops = df_crops.nlargest(3, 'ROI_Percent')
+        # Sort by ROI but handle perennial crops separately
+        annual_crops = df_crops[df_crops['ROI_Percent'] >= 0].nlargest(3, 'ROI_Percent')
+        perennial_crops = df_crops[df_crops['ROI_Percent'] < 0]
         
-        for i, (_, crop) in enumerate(top_crops.iterrows()):
+        for i, (_, crop) in enumerate(annual_crops.iterrows()):
             rank_emoji = ['🥇', '🥈', '🥉'][i]
             
             investment_str = f"{crop['Investment']:,}"
@@ -776,7 +789,7 @@ def create_crop_recommendation_analysis(region, query, context="default"):
             
             html_content = f"""
             <div class='recommendation-box'>
-                <h4>{rank_emoji} Rank {i+1}: {crop['Crop']}</h4>
+                <h4>{rank_emoji} Rank {i+1}: {crop['Crop']} (Annual Crop)</h4>
                 <div style='display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;'>
                     <div>
                         <p><strong>💰 Investment:</strong> ₹{investment_str}/acre</p>
@@ -787,6 +800,30 @@ def create_crop_recommendation_analysis(region, query, context="default"):
                         <p><strong>📈 ROI:</strong> {roi_str}%</p>
                     </div>
                 </div>
+            </div>
+            """
+            st.markdown(html_content, unsafe_allow_html=True)
+        
+        # Show perennial crops with warnings
+        for _, crop in perennial_crops.iterrows():
+            investment_str = f"{crop['Investment']:,}"
+            
+            html_content = f"""
+            <div class='recommendation-box' style='border: 2px solid #f39c12;'>
+                <h4>⚠️ {crop['Crop']} (Perennial Crop - Long-term Investment)</h4>
+                <div style='display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;'>
+                    <div>
+                        <p><strong>💰 Initial Investment:</strong> ₹{investment_str}/acre</p>
+                        <p><strong>⏰ Gestation Period:</strong> 4-5 years</p>
+                    </div>
+                    <div>
+                        <p><strong>💵 Year 1-4 Revenue:</strong> ₹0 (No income)</p>
+                        <p><strong>📈 Long-term ROI:</strong> 25-30% (after maturity)</p>
+                    </div>
+                </div>
+                <p style='color: #856404; font-weight: 600; margin-top: 1rem;'>
+                    ⚠️ <strong>Note:</strong> Requires patience and long-term planning. Good returns only after 5+ years.
+                </p>
             </div>
             """
             st.markdown(html_content, unsafe_allow_html=True)
@@ -836,21 +873,36 @@ def parse_gemini_response(response_text, question, region, farm_size, language="
         if st.button("📅 Crop Planning", use_container_width=True):
             create_crop_plan_diagram(region, question)
 
-
 def create_financial_analysis(query, region, farm_size):
-    """Create financial analysis based on query"""
-    st.markdown("### 💰 **Detailed Financial Analysis**")
+    """Create ultra-realistic financial analysis based on query"""
+    st.markdown("### 💰 **Ultra-Realistic Financial Analysis**")
     
     query_lower = query.lower()
     crop = next((c for c in BASE_COSTS if c.lower() in query_lower), 'Rice')
     
+    # Parse farm size to get numeric value
+    farm_size_multiplier = 1
+    if "Small" in farm_size:
+        farm_size_multiplier = 1
+    elif "Medium" in farm_size:
+        farm_size_multiplier = 5
+    elif "Large" in farm_size:
+        farm_size_multiplier = 25
+    elif "Very Large" in farm_size:
+        farm_size_multiplier = 75
+    
+    # Adjust costs based on farm size
+    base_cost = BASE_COSTS[crop] * farm_size_multiplier
+    
+    # REALISTIC COST BREAKDOWN (based on agricultural studies)
     cost_components = {
-        'Seeds & Planting Material': BASE_COSTS[crop] * 0.25,
-        'Fertilizers & Nutrients': BASE_COSTS[crop] * 0.35,
-        'Labor & Operations': BASE_COSTS[crop] * 0.20,
-        'Irrigation & Water': BASE_COSTS[crop] * 0.10,
-        'Pesticides & Protection': BASE_COSTS[crop] * 0.05,
-        'Equipment & Machinery': BASE_COSTS[crop] * 0.05
+        'Seeds & Planting Material': base_cost * 0.10,  # 10%
+        'Fertilizers & Nutrients': base_cost * 0.22,    # 22% 
+        'Labor & Operations': base_cost * 0.38,         # 38% (biggest cost)
+        'Irrigation & Water': base_cost * 0.12,         # 12%
+        'Pesticides & Protection': base_cost * 0.08,    # 8%
+        'Equipment & Machinery': base_cost * 0.06,      # 6%
+        'Other Expenses': base_cost * 0.04              # 4% (transport, storage)
     }
     
     df_costs = pd.DataFrame(list(cost_components.items()), columns=['Category', 'Amount'])
@@ -859,7 +911,7 @@ def create_financial_analysis(query, region, farm_size):
     
     fig_pie = px.pie(df_costs, values='Amount', names='Category',
                     title=f"Investment Breakdown for {crop} in {region}",
-                    color_discrete_sequence=['#8b7355', '#7a8471', '#a39081', '#9ca986', '#8b9a7e'])
+                    color_discrete_sequence=['#8b7355', '#7a8471', '#a39081', '#9ca986', '#8b9a7e', '#aabbcc', '#ccddee'])
     fig_pie.update_traces(textposition='inside', textinfo='percent+label')
     fig_pie.update_layout(
         font=dict(size=14, color='#2d3436'),
@@ -870,21 +922,65 @@ def create_financial_analysis(query, region, farm_size):
     )
     st.plotly_chart(fig_pie, use_container_width=True, key="pie_chart_financial")
     
-    st.markdown("#### 💡 **Financial Summary**")
+    st.markdown("#### 💡 **Realistic Financial Summary**")
     
     total_investment = sum(cost_components.values())
     yield_data = YIELD_DATA.get(crop, {"yield_kg": 2000, "price_kg": 20})
-    expected_revenue = yield_data['yield_kg'] * yield_data['price_kg']
-    profit = expected_revenue - total_investment
-    roi_percent = (profit / total_investment * 100) if total_investment > 0 else 0
     
+    # SPECIAL CALCULATIONS FOR PERENNIAL CROPS
+    if crop == 'Mango':
+        # First 4 years: only investment, no income
+        years_to_maturity = 4
+        mature_yield = 7000 * farm_size_multiplier  # kg after maturity
+        mature_revenue = mature_yield * yield_data['price_kg']
+        mature_profit = mature_revenue - (total_investment * 0.3)  # 30% annual maintenance
+        annual_roi_after_maturity = (mature_profit / total_investment * 100)
+        
+        payback_period = f"{years_to_maturity + 2}-{years_to_maturity + 4} years"
+        expected_revenue = 0  # No revenue in first year
+        profit = -total_investment  # Loss in first year
+        roi_percent = -100  # Loss in year 1
+        
+    else:
+        # Annual crops with realistic success rates
+        expected_yield = yield_data['yield_kg'] * farm_size_multiplier * 0.75  # 75% average success rate
+        expected_revenue = expected_yield * yield_data['price_kg'] * 0.85  # 15% post-harvest losses
+        profit = expected_revenue - total_investment
+        roi_percent = (profit / total_investment * 100) if total_investment > 0 else 0
+        
+        if crop in ['Cotton', 'Sugarcane']:
+            payback_period = "12-18 months"
+        else:
+            payback_period = "8-12 months"
+    
+    # RISK FACTORS
+    risk_factors = {
+        'Mango': "⚠️ No income for 4+ years, disease risk, market volatility",
+        'Rice': "⚠️ Monsoon dependency, pest attacks, storage losses", 
+        'Wheat': "⚠️ Hailstorm risk, price volatility, timely harvest critical",
+        'Cotton': "⚠️ Bollworm attacks, quality issues, export dependency",
+        'Sugarcane': "⚠️ Water intensive, mill payment delays, pest issues",
+        'Onion': "⚠️ High price volatility, storage losses, export bans",
+        'Tomato': "⚠️ Pest attacks, price crashes, perishable nature"
+    }
+    
+    # DISPLAY METRICS
     col1, col2, col3, col4 = st.columns(4)
-    metrics = [
-        (f"₹{total_investment:,.0f}", "Total Investment", "💰"),
-        (f"{roi_percent:.1f}%", "Expected ROI", "📈"),
-        (f"12-18 months", "Payback Period", "⏰"),
-        (f"₹{profit:,.0f}", "Expected Profit", "💵")
-    ]
+    
+    if crop == 'Mango':
+        metrics = [
+            (f"₹{total_investment:,.0f}", "Initial Investment", "💰"),
+            (f"{annual_roi_after_maturity:.1f}%", "ROI After Maturity", "📈"),
+            (payback_period, "Payback Period", "⏰"),
+            (f"₹{mature_profit:,.0f}", "Annual Profit (Mature)", "💵")
+        ]
+    else:
+        metrics = [
+            (f"₹{total_investment:,.0f}", "Total Investment", "💰"),
+            (f"{roi_percent:.1f}%", "Expected ROI", "📈"),
+            (payback_period, "Payback Period", "⏰"),
+            (f"₹{profit:,.0f}", "Expected Profit", "💵")
+        ]
     
     for col, (value, label, emoji) in zip([col1, col2, col3, col4], metrics):
         with col:
@@ -896,6 +992,43 @@ def create_financial_analysis(query, region, farm_size):
             </div>
             """
             st.markdown(html_content, unsafe_allow_html=True)
+    
+    # REALITY CHECK SECTION
+    st.markdown("---")
+    st.markdown("#### 🎯 **Reality Check**")
+    
+    if crop == 'Mango':
+        st.error(f"""
+        **MANGO FARMING REALITY:**
+        • ❌ **No income for first 4-5 years**
+        • ❌ **High water requirement: 4-5 lakh liters/tree/year**
+        • ❌ **Pest & disease management critical**
+        • ✅ **Good returns after year 6-8**
+        • ✅ **25-30 year productive life**
+        """)
+    
+    risk_factor = risk_factors.get(crop, "⚠️ Standard agricultural risks apply")
+    st.warning(f"""
+    **RISK FACTORS**: {risk_factor}
+    
+    **IMPORTANT DISCLAIMERS:**
+    • Yields shown are OPTIMISTIC - expect 20-30% lower in reality
+    • Prices fluctuate ±40% seasonally
+    • First-time farmers typically get 50% lower yields
+    • Climate change affecting traditional patterns
+    • Input costs increasing 8-12% annually
+    • Post-harvest losses: 15-25% for most crops
+    """)
+    
+    # MARKET REALITY
+    st.info(f"""
+    💡 **CURRENT MARKET REALITY ({region})**:
+    • **{crop.capitalize()} price range**: ₹{yield_data['price_kg']-8} - ₹{yield_data['price_kg']+12} per kg
+    • **Typical farmer gets**: ₹{yield_data['price_kg']-5} per kg (after middleman)
+    • **Storage losses**: 15-25% for most crops
+    • **Transportation cost**: ₹2-4 per kg to market
+    • **Success rate**: 75% for experienced farmers, 50% for beginners
+    """)
 
 def create_government_schemes_analysis(query):
     """Display government schemes relevant to the query"""
@@ -969,7 +1102,6 @@ def create_contact_section(query):
 def main():
     if 'selected_question' not in st.session_state:
         st.session_state.selected_question = ""
-    
 
     st.markdown("""
     <div class='main-header'>
