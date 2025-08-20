@@ -715,12 +715,11 @@ def create_crop_recommendation_analysis(region, query, context="default"):
     else:
         suitable_crops = ['Rice', 'Wheat', 'Maize', 'Groundnut']
     
-    # Filter crops based on query (e.g., if user mentions specific crops)
     query_lower = query.lower()
     filtered_crops = [
         crop for crop in suitable_crops 
         if crop.lower() in query_lower or any(keyword in query_lower for keyword in ['crop', 'recommend', 'plant', 'grow'])
-    ] or suitable_crops  # Fallback to suitable crops if no specific crops mentioned
+    ] or suitable_crops
     
     crop_performance = []
     for crop in filtered_crops:
@@ -729,13 +728,12 @@ def create_crop_recommendation_analysis(region, query, context="default"):
             yield_kg = YIELD_DATA[crop]['yield_kg']
             price_kg = YIELD_DATA[crop]['price_kg']
             
-            # Special handling for perennial crops like Mango
             if crop == 'Mango':
-                revenue = 0  # No revenue in first few years
-                profit = -cost  # Pure loss initially
-                roi = -100  # Negative ROI initially
+                revenue = 0
+                profit = -cost
+                roi = -100
             else:
-                revenue = yield_kg * price_kg * 0.85  # 85% success rate
+                revenue = yield_kg * price_kg * 0.85
                 profit = revenue - cost
                 roi = (profit / cost * 100) if cost > 0 else 0
             
@@ -751,31 +749,48 @@ def create_crop_recommendation_analysis(region, query, context="default"):
     df_crops = pd.DataFrame(crop_performance)
     
     if not df_crops.empty:
-        # Filter out crops with negative ROI for the chart
         df_positive_roi = df_crops[df_crops['ROI_Percent'] >= 0]
         
         if not df_positive_roi.empty:
-            fig_roi = px.bar(df_positive_roi, x='Crop', y='ROI_Percent',
-                            title=f"ROI Comparison for {region} (Annual Crops Only)",
-                            color='ROI_Percent', color_continuous_scale='Greens',
-                            text='ROI_Percent')
+            fig_roi = px.bar(
+                df_positive_roi,
+                x='Crop',
+                y='ROI_Percent',
+                title=f"ROI Comparison for {region} (Annual Crops Only)",
+                color='ROI_Percent',
+                color_continuous_scale='Greens',
+                text='ROI_Percent'
+            )
             fig_roi.update_traces(
-                texttemplate='%{text:.1f}%', 
+                texttemplate='%{text:.1f}%',
                 textposition='outside',
                 hovertemplate='<b>%{x}</b><br>ROI: %{y:.1f}%<extra></extra>'
             )
             fig_roi.update_layout(
-                font=dict(size=14, color='#2d3436'),
+                font=dict(size=14, color='#000000'), # Font color black
                 paper_bgcolor='rgba(0,0,0,0)',
                 plot_bgcolor='rgba(0,0,0,0)',
-                title_font_color='#2d3436',
+                title_font_color='#000000',
                 height=500,
-                hovermode='closest'
+                hovermode='closest',
+                legend=dict(
+                    font=dict(color='#000000'), # Legend font color black
+                    title_font=dict(color='#000000') # Legend title font color black
+                ),
+                xaxis=dict(
+                    title_font=dict(color='#000000'),
+                    tickfont=dict(color='#000000'),
+                    color='#000000'
+                ),
+                yaxis=dict(
+                    title_font=dict(color='#000000'),
+                    tickfont=dict(color='#000000'),
+                    color='#000000'
+                )
             )
             st.plotly_chart(fig_roi, use_container_width=True, key=f"roi_chart_crop_recommendation_{context}")
         
         st.markdown("#### 🏆 **Top Crop Recommendations**")
-        # Sort by ROI but handle perennial crops separately
         annual_crops = df_crops[df_crops['ROI_Percent'] >= 0].nlargest(3, 'ROI_Percent')
         perennial_crops = df_crops[df_crops['ROI_Percent'] < 0]
         
@@ -804,7 +819,6 @@ def create_crop_recommendation_analysis(region, query, context="default"):
             """
             st.markdown(html_content, unsafe_allow_html=True)
         
-        # Show perennial crops with warnings
         for _, crop in perennial_crops.iterrows():
             investment_str = f"{crop['Investment']:,}"
             
@@ -827,6 +841,132 @@ def create_crop_recommendation_analysis(region, query, context="default"):
             </div>
             """
             st.markdown(html_content, unsafe_allow_html=True)
+            
+# def create_crop_recommendation_analysis(region, query, context="default"):
+#     """Create tailored crop recommendation analysis based on query"""
+#     st.markdown("### 🌾 **Crop Performance & Recommendations**")
+    
+#     if region in ['Punjab', 'Haryana']:
+#         suitable_crops = ['Wheat', 'Rice', 'Maize', 'Cotton']
+#     elif region in ['Maharashtra', 'Gujarat']:
+#         suitable_crops = ['Cotton', 'Sugarcane', 'Soybean', 'Onion']
+#     elif region in ['Tamil Nadu', 'Karnataka']:
+#         suitable_crops = ['Rice', 'Turmeric', 'Mango', 'Coffee']
+#     else:
+#         suitable_crops = ['Rice', 'Wheat', 'Maize', 'Groundnut']
+    
+#     # Filter crops based on query (e.g., if user mentions specific crops)
+#     query_lower = query.lower()
+#     filtered_crops = [
+#         crop for crop in suitable_crops 
+#         if crop.lower() in query_lower or any(keyword in query_lower for keyword in ['crop', 'recommend', 'plant', 'grow'])
+#     ] or suitable_crops  # Fallback to suitable crops if no specific crops mentioned
+    
+#     crop_performance = []
+#     for crop in filtered_crops:
+#         if crop in BASE_COSTS and crop in YIELD_DATA:
+#             cost = BASE_COSTS[crop]
+#             yield_kg = YIELD_DATA[crop]['yield_kg']
+#             price_kg = YIELD_DATA[crop]['price_kg']
+            
+#             # Special handling for perennial crops like Mango
+#             if crop == 'Mango':
+#                 revenue = 0  # No revenue in first few years
+#                 profit = -cost  # Pure loss initially
+#                 roi = -100  # Negative ROI initially
+#             else:
+#                 revenue = yield_kg * price_kg * 0.85  # 85% success rate
+#                 profit = revenue - cost
+#                 roi = (profit / cost * 100) if cost > 0 else 0
+            
+#             crop_performance.append({
+#                 'Crop': crop,
+#                 'Investment': cost,
+#                 'Expected_Yield_kg': yield_kg,
+#                 'Revenue': revenue,
+#                 'Profit': profit,
+#                 'ROI_Percent': roi
+#             })
+    
+#     df_crops = pd.DataFrame(crop_performance)
+    
+#     if not df_crops.empty:
+#         # Filter out crops with negative ROI for the chart
+#         df_positive_roi = df_crops[df_crops['ROI_Percent'] >= 0]
+        
+#         if not df_positive_roi.empty:
+#             fig_roi = px.bar(df_positive_roi, x='Crop', y='ROI_Percent',
+#                             title=f"ROI Comparison for {region} (Annual Crops Only)",
+#                             color='ROI_Percent', color_continuous_scale='Greens',
+#                             text='ROI_Percent')
+#             fig_roi.update_traces(
+#                 texttemplate='%{text:.1f}%', 
+#                 textposition='outside',
+#                 hovertemplate='<b>%{x}</b><br>ROI: %{y:.1f}%<extra></extra>'
+#             )
+#             fig_roi.update_layout(
+#                 font=dict(size=14, color='#2d3436'),
+#                 paper_bgcolor='rgba(0,0,0,0)',
+#                 plot_bgcolor='rgba(0,0,0,0)',
+#                 title_font_color='#2d3436',
+#                 height=500,
+#                 hovermode='closest'
+#             )
+#             st.plotly_chart(fig_roi, use_container_width=True, key=f"roi_chart_crop_recommendation_{context}")
+        
+#         st.markdown("#### 🏆 **Top Crop Recommendations**")
+#         # Sort by ROI but handle perennial crops separately
+#         annual_crops = df_crops[df_crops['ROI_Percent'] >= 0].nlargest(3, 'ROI_Percent')
+#         perennial_crops = df_crops[df_crops['ROI_Percent'] < 0]
+        
+#         for i, (_, crop) in enumerate(annual_crops.iterrows()):
+#             rank_emoji = ['🥇', '🥈', '🥉'][i]
+            
+#             investment_str = f"{crop['Investment']:,}"
+#             yield_str = f"{crop['Expected_Yield_kg']:,}"
+#             revenue_str = f"{crop['Revenue']:,}"
+#             roi_str = f"{crop['ROI_Percent']:.1f}"
+            
+#             html_content = f"""
+#             <div class='recommendation-box'>
+#                 <h4>{rank_emoji} Rank {i+1}: {crop['Crop']} (Annual Crop)</h4>
+#                 <div style='display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;'>
+#                     <div>
+#                         <p><strong>💰 Investment:</strong> ₹{investment_str}/acre</p>
+#                         <p><strong>🌾 Expected Yield:</strong> {yield_str} kg/acre</p>
+#                     </div>
+#                     <div>
+#                         <p><strong>💵 Expected Revenue:</strong> ₹{revenue_str}</p>
+#                         <p><strong>📈 ROI:</strong> {roi_str}%</p>
+#                     </div>
+#                 </div>
+#             </div>
+#             """
+#             st.markdown(html_content, unsafe_allow_html=True)
+        
+#         # Show perennial crops with warnings
+#         for _, crop in perennial_crops.iterrows():
+#             investment_str = f"{crop['Investment']:,}"
+            
+#             html_content = f"""
+#             <div class='recommendation-box' style='border: 2px solid #f39c12;'>
+#                 <h4>⚠️ {crop['Crop']} (Perennial Crop - Long-term Investment)</h4>
+#                 <div style='display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;'>
+#                     <div>
+#                         <p><strong>💰 Initial Investment:</strong> ₹{investment_str}/acre</p>
+#                         <p><strong>⏰ Gestation Period:</strong> 4-5 years</p>
+#                     </div>
+#                     <div>
+#                         <p><strong>💵 Year 1-4 Revenue:</strong> ₹0 (No income)</p>
+#                         <p><strong>📈 Long-term ROI:</strong> 25-30% (after maturity)</p>
+#                     </div>
+#                 </div>
+#                 <p style='color: #856404; font-weight: 600; margin-top: 1rem;'>
+#                     ⚠️ <strong>Note:</strong> Requires patience and long-term planning. Good returns only after 5+ years.
+#                 </p>
+#             </div>
+#             """
+#             st.markdown(html_content, unsafe_allow_html=True)
 
 def parse_gemini_response(response_text, question, region, farm_size, language="English"):
     """Parse and display Gemini response with improved formatting and alignment"""
