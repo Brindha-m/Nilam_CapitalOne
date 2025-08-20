@@ -839,7 +839,7 @@ def parse_gemini_response(response_text, question, region, farm_size, language="
 
 def create_financial_analysis(query, region, farm_size):
     """Create financial analysis based on query"""
-    st.markdown("### 💰 Detailed Financial Analysis")
+    st.markdown("### 💰 **Detailed Financial Analysis**")
     
     query_lower = query.lower()
     crop = next((c for c in BASE_COSTS if c.lower() in query_lower), 'Rice')
@@ -855,7 +855,7 @@ def create_financial_analysis(query, region, farm_size):
     
     df_costs = pd.DataFrame(list(cost_components.items()), columns=['Category', 'Amount'])
     
-    st.markdown("#### 📊 Investment Breakdown Analysis")
+    st.markdown("#### 📊 **Investment Breakdown Analysis**")
     
     fig_pie = px.pie(df_costs, values='Amount', names='Category',
                     title=f"Investment Breakdown for {crop} in {region}",
@@ -870,7 +870,7 @@ def create_financial_analysis(query, region, farm_size):
     )
     st.plotly_chart(fig_pie, use_container_width=True, key="pie_chart_financial")
     
-    st.markdown("#### 💡 Financial Summary")
+    st.markdown("#### 💡 **Financial Summary**")
     
     total_investment = sum(cost_components.values())
     yield_data = YIELD_DATA.get(crop, {"yield_kg": 2000, "price_kg": 20})
@@ -896,8 +896,34 @@ def create_financial_analysis(query, region, farm_size):
             </div>
             """
             st.markdown(html_content, unsafe_allow_html=True)
-            
 
+def create_government_schemes_analysis(query):
+    """Display government schemes relevant to the query"""
+    st.markdown("### 🎯 **Government Schemes & Benefits**")
+    
+    query_lower = query.lower()
+    relevant_schemes = {
+        scheme: details for scheme, details in GOVERNMENT_SCHEMES.items()
+        if any(keyword in query_lower for keyword in [scheme.lower(), 'subsidy', 'scheme', 'government'])
+    } or GOVERNMENT_SCHEMES
+    
+    col1, col2 = st.columns(2)
+    for i, (scheme, details) in enumerate(relevant_schemes.items()):
+        container = col1 if i % 2 == 0 else col2
+        with container:
+            benefit_text = f"₹{details['benefit']:,}" if isinstance(details['benefit'], int) else details['benefit']
+            
+            html_content = f"""
+            <div class='recommendation-box'>
+                <h4>📋 {scheme}</h4>
+                <p><strong>💰 Benefit:</strong> {benefit_text}</p>
+                <p><strong>👥 Eligibility:</strong> {details['eligibility']}</p>
+                <p><strong>📱 Apply:</strong> {details['application']}</p>
+                <p><strong>☎️ Contact:</strong> {details['contact']}</p>
+            </div>
+            """
+            st.markdown(html_content, unsafe_allow_html=True)
+            
 def create_crop_plan_diagram(region, query):
     """Create crop plan diagram with timeline based on query"""
     st.markdown("## 📅 **Crop Planning & Timeline**")
