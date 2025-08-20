@@ -836,81 +836,67 @@ def parse_gemini_response(response_text, question, region, farm_size, language="
         if st.button("📅 Crop Planning", use_container_width=True):
             create_crop_plan_diagram(region, question)
 
+
 def create_financial_analysis(query, region, farm_size):
-    """Create realistic financial analysis based on query"""
-    st.markdown("### 💰 **Detailed Financial Analysis**")
+    """Create financial analysis based on query"""
+    st.markdown("### 💰 Detailed Financial Analysis")
     
     query_lower = query.lower()
     crop = next((c for c in BASE_COSTS if c.lower() in query_lower), 'Rice')
     
-    base_cost = BASE_COSTS[crop] * farm_size
-    
     cost_components = {
-        'Seeds & Planting Material': base_cost * 0.15,  
-        'Fertilizers & Nutrients': base_cost * 0.20,    
-        'Labor & Operations': base_cost * 0.30,        
-        'Irrigation & Water': base_cost * 0.15,         
-        'Pesticides & Protection': base_cost * 0.10,   
-        'Equipment & Machinery': base_cost * 0.10      
+        'Seeds & Planting Material': BASE_COSTS[crop] * 0.25,
+        'Fertilizers & Nutrients': BASE_COSTS[crop] * 0.35,
+        'Labor & Operations': BASE_COSTS[crop] * 0.20,
+        'Irrigation & Water': BASE_COSTS[crop] * 0.10,
+        'Pesticides & Protection': BASE_COSTS[crop] * 0.05,
+        'Equipment & Machinery': BASE_COSTS[crop] * 0.05
     }
     
     df_costs = pd.DataFrame(list(cost_components.items()), columns=['Category', 'Amount'])
     
-    st.markdown("#### 📊 **Investment Breakdown Analysis**")
-   
-    st.markdown("#### 💡 **Financial Summary**")
+    st.markdown("#### 📊 Investment Breakdown Analysis")
+    
+    fig_pie = px.pie(df_costs, values='Amount', names='Category',
+                    title=f"Investment Breakdown for {crop} in {region}",
+                    color_discrete_sequence=['#8b7355', '#7a8471', '#a39081', '#9ca986', '#8b9a7e'])
+    fig_pie.update_traces(textposition='inside', textinfo='percent+label')
+    fig_pie.update_layout(
+        font=dict(size=14, color='#2d3436'),
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        title_font_color='#2d3436',
+        height=500
+    )
+    st.plotly_chart(fig_pie, use_container_width=True, key="pie_chart_financial")
+    
+    st.markdown("#### 💡 Financial Summary")
     
     total_investment = sum(cost_components.values())
     yield_data = YIELD_DATA.get(crop, {"yield_kg": 2000, "price_kg": 20})
-
-    expected_yield = yield_data['yield_kg'] * farm_size
-    expected_revenue = expected_yield * yield_data['price_kg']
+    expected_revenue = yield_data['yield_kg'] * yield_data['price_kg']
     profit = expected_revenue - total_investment
     roi_percent = (profit / total_investment * 100) if total_investment > 0 else 0
-
-    payback_periods = {
-        'mango': '5-8 years',      
-        'banana': '18-24 months',  
-        'rice': '6-12 months',     
-        'wheat': '6-12 months',    
-        'sugarcane': '12-18 months'
-    }
-    payback_period = payback_periods.get(crop.lower(), '12-15 months')
-    
-    risk_factors = {
-        'mango': "⚠️ High initial investment, long gestation period",
-        'banana': "⚠️ Disease susceptible, market price volatility", 
-        'rice': "⚠️ Weather dependent, labor intensive",
-        'wheat': "⚠️ Market price fluctuations, storage costs"
-    }
     
     col1, col2, col3, col4 = st.columns(4)
     metrics = [
         (f"₹{total_investment:,.0f}", "Total Investment", "💰"),
-        (f"{roi_percent:.1f}%", "Expected ROI*", "📈"),
-        (payback_period, "Payback Period", "⏰"),
-        (f"₹{profit:,.0f}", "Expected Profit*", "💵")
+        (f"{roi_percent:.1f}%", "Expected ROI", "📈"),
+        (f"12-18 months", "Payback Period", "⏰"),
+        (f"₹{profit:,.0f}", "Expected Profit", "💵")
     ]
     
-   
-    st.markdown("---")
-    st.markdown("#### ⚠️ **Important Notes**")
-    st.warning(f"""
-    **Risk Factors for {crop}**: {risk_factors.get(crop.lower(), 'Standard agricultural risks apply')}
-    
-    **Disclaimers:**
-    • *Returns depend on weather, market conditions, and farming practices
-    • Prices shown are approximate and may vary significantly
-    • First-time farmers should expect lower yields initially
-    • Additional costs may include land lease, insurance, and storage
-    • {crop} farming requires specific climate and soil conditions
-    """)
-    
-    st.info(f"""
-    💡 **Market Reality**: Current wholesale price for {crop} ranges from ₹{yield_data['price_kg']-5} to ₹{yield_data['price_kg']+10} per kg.
-    Retail margins, transportation, and seasonal variations affect final farmer prices.
-    """)
-
+    for col, (value, label, emoji) in zip([col1, col2, col3, col4], metrics):
+        with col:
+            html_content = f"""
+            <div class='metric-card' style='text-align: center; padding: 1.5rem; margin: 0.5rem 0;'>
+                <div style='font-size: 2.5rem; margin-bottom: 0.5rem;'>{emoji}</div>
+                <div style='font-size: 1.8rem; font-weight: bold; color: #2d3436; margin-bottom: 0.5rem;'>{value}</div>
+                <div style='font-size: 1rem; color: #636e72; font-weight: 600;'>{label}</div>
+            </div>
+            """
+            st.markdown(html_content, unsafe_allow_html=True)
+            
 
 def create_crop_plan_diagram(region, query):
     """Create crop plan diagram with timeline based on query"""
